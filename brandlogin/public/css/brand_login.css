@@ -1,0 +1,402 @@
+/* ==========================================================================
+   Brand Login — whitelabel /login theme
+   Layout: split-screen. Left = umbrella brand hero. Right = tenant sign-in.
+   All auth behaviour (submit, hash routing, validation) stays owned by
+   Frappe core's login.js — this file only skins existing markup.
+   ========================================================================== */
+
+:root {
+	--bl-font-display: 'Sora', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+	--bl-font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+	--bl-hero-1: #1a0303;
+	--bl-hero-2: #430a0a;
+	--bl-panel-bg: #fafafa;
+	--bl-card-bg: #ffffff;
+	--bl-text: #14161f;
+	--bl-text-muted: #6b7280;
+	--bl-text-inverse: #fdf2f2;
+	--bl-text-inverse-muted: #e0a9a9;
+	--bl-border: #e5e7eb;
+	--bl-shadow: 0 20px 60px -20px rgba(20, 22, 31, 0.25);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.brand-panel-inner .login-content,
+	.brand-panel-inner .brand-card-head {
+		animation: bl-rise 0.5s ease both;
+	}
+}
+
+@keyframes bl-rise {
+	from { opacity: 0; transform: translateY(10px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- page shell -------------------------------------------------------- */
+
+body:has(.brand-auth-shell) {
+	background: var(--bl-panel-bg);
+}
+
+.brand-auth-shell {
+	min-height: 100vh;
+	display: grid;
+	grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+	font-family: var(--bl-font-body);
+	color: var(--bl-text);
+}
+
+/* ---- hero panel (left) -------------------------------------------------- */
+
+.brand-hero {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 3rem 2.5rem;
+	color: var(--bl-text-inverse);
+	overflow: hidden;
+}
+
+.brand-hero-gradient {
+	background:
+		radial-gradient(60% 50% at 15% 15%, color-mix(in srgb, var(--brand-primary) 55%, transparent) 0%, transparent 60%),
+		radial-gradient(50% 45% at 85% 85%, color-mix(in srgb, var(--brand-accent) 40%, transparent) 0%, transparent 60%),
+		linear-gradient(160deg, var(--bl-hero-1) 0%, var(--bl-hero-2) 100%);
+}
+
+.brand-hero-solid {
+	background: var(--brand-primary);
+}
+
+.brand-hero-inner {
+	position: relative;
+	z-index: 1;
+	max-width: 380px;
+}
+
+.brand-signal {
+	display: flex;
+	align-items: flex-end;
+	gap: 5px;
+	height: 22px;
+	margin-bottom: 1.75rem;
+}
+
+.brand-signal span {
+	display: block;
+	width: 5px;
+	border-radius: 2px;
+	background: var(--brand-accent);
+	opacity: 0.55;
+}
+
+.brand-signal span:nth-child(1) { height: 35%; }
+.brand-signal span:nth-child(2) { height: 60%; }
+.brand-signal span:nth-child(3) { height: 85%; }
+.brand-signal span:nth-child(4) { height: 100%; }
+
+@media (prefers-reduced-motion: no-preference) {
+	.brand-signal span {
+		animation: bl-pulse 1.8s ease-in-out infinite;
+	}
+	.brand-signal span:nth-child(1) { animation-delay: 0s; }
+	.brand-signal span:nth-child(2) { animation-delay: 0.15s; }
+	.brand-signal span:nth-child(3) { animation-delay: 0.3s; }
+	.brand-signal span:nth-child(4) { animation-delay: 0.45s; }
+}
+
+@keyframes bl-pulse {
+	0%, 100% { opacity: 0.4; }
+	50% { opacity: 1; }
+}
+
+.brand-wordmark {
+	font-family: var(--bl-font-display);
+	font-weight: 800;
+	font-size: 2.5rem;
+	line-height: 1.05;
+	letter-spacing: -0.02em;
+}
+
+.brand-sub-wordmark {
+	margin-top: 0.35rem;
+	font-family: var(--bl-font-display);
+	font-weight: 600;
+	font-size: 1.05rem;
+	color: var(--bl-text-inverse-muted);
+}
+
+.brand-tagline {
+	margin-top: 1.1rem;
+	font-size: 1rem;
+	line-height: 1.6;
+	color: var(--bl-text-inverse-muted);
+	max-width: 30ch;
+}
+
+.brand-status {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin-top: 2.5rem;
+	padding: 0.4rem 0.85rem;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.06);
+	border: 1px solid rgba(255, 255, 255, 0.12);
+	font-size: 0.78rem;
+	color: var(--bl-text-inverse-muted);
+}
+
+.brand-status-dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--brand-accent);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-accent) 25%, transparent);
+}
+
+/* ---- form panel (right) ------------------------------------------------- */
+
+.brand-panel {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 3rem 2rem;
+	background: var(--bl-panel-bg);
+}
+
+.brand-panel-inner {
+	width: 100%;
+	max-width: 380px;
+}
+
+.brand-card-head {
+	text-align: left;
+	margin-bottom: 1.5rem;
+}
+
+.brand-logo {
+	max-height: 44px;
+	max-width: 180px;
+	object-fit: contain;
+	margin-bottom: 1.1rem;
+	display: block;
+}
+
+.brand-heading,
+.brand-card-head h4 {
+	font-family: var(--bl-font-display);
+	font-weight: 700;
+	font-size: 1.4rem;
+	color: var(--bl-text);
+	letter-spacing: -0.01em;
+	margin: 0;
+}
+
+.brand-card,
+.login-content.page-card {
+	background: var(--bl-card-bg);
+	border: 1px solid var(--bl-border);
+	border-radius: 16px;
+	box-shadow: var(--bl-shadow);
+	padding: 1.75rem 1.75rem 1.5rem;
+}
+
+/* form fields */
+
+.brand-panel .form-group {
+	margin-bottom: 1rem;
+}
+
+.brand-panel .email-field,
+.brand-panel .password-field {
+	position: relative;
+}
+
+.brand-panel .form-control {
+	height: 46px;
+	padding: 0 2.6rem 0 2.6rem;
+	border-radius: 10px;
+	border: 1.5px solid var(--bl-border);
+	background: #fff;
+	font-family: var(--bl-font-body);
+	font-size: 0.92rem;
+	color: var(--bl-text);
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.brand-panel .form-control:focus {
+	border-color: var(--brand-primary);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 18%, transparent);
+	outline: none;
+}
+
+.brand-panel .field-icon {
+	position: absolute;
+	left: 0.85rem;
+	top: 50%;
+	transform: translateY(-50%);
+	color: var(--bl-text-muted);
+	pointer-events: none;
+}
+
+.brand-panel .toggle-password {
+	position: absolute;
+	right: 0.9rem;
+	top: 50%;
+	transform: translateY(-50%);
+	font-size: 0.78rem;
+	cursor: pointer;
+	color: var(--bl-text-muted);
+}
+
+.brand-panel .toggle-password:hover {
+	color: var(--brand-primary);
+}
+
+.brand-panel .forgot-password-message {
+	text-align: right;
+	margin: 0.5rem 0 0;
+	font-size: 0.85rem;
+}
+
+.brand-panel a {
+	color: var(--brand-primary);
+	text-decoration: none;
+}
+
+.brand-panel a:hover {
+	text-decoration: underline;
+}
+
+/* buttons */
+
+.brand-panel .btn-login,
+.brand-panel .btn-forgot,
+.brand-panel .btn-login-with-email-link {
+	height: 46px;
+	border-radius: 10px;
+	font-family: var(--bl-font-body);
+	font-weight: 600;
+	font-size: 0.92rem;
+	border: none;
+	background: var(--brand-primary);
+	color: #fff;
+	transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+}
+
+.brand-panel .btn-login:hover,
+.brand-panel .btn-forgot:hover,
+.brand-panel .btn-login-with-email-link:hover {
+	opacity: 0.92;
+	transform: translateY(-1px);
+	box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--brand-primary) 60%, transparent);
+}
+
+.brand-panel .btn-login:active,
+.brand-panel .btn-forgot:active,
+.brand-panel .btn-login-with-email-link:active {
+	transform: translateY(0);
+}
+
+.brand-panel .btn-login-option,
+.brand-panel .btn-ldap-login {
+	height: 44px;
+	border-radius: 10px;
+	border: 1.5px solid var(--bl-border);
+	background: #fff;
+	font-size: 0.88rem;
+	font-weight: 500;
+}
+
+.brand-panel .btn-login-option:hover,
+.brand-panel .btn-ldap-login:hover {
+	border-color: var(--brand-primary);
+}
+
+.brand-panel .login-divider {
+	font-size: 0.8rem;
+	color: var(--bl-text-muted);
+	margin: 1rem 0;
+}
+
+.brand-panel .sign-up-message {
+	text-align: center;
+	margin-top: 1.1rem;
+	font-size: 0.88rem;
+	color: var(--bl-text-muted);
+}
+
+/* footer */
+
+.brand-footer {
+	text-align: center;
+	margin-top: 1.75rem;
+}
+
+.brand-footer-text {
+	font-size: 0.8rem;
+	color: var(--bl-text-muted);
+	margin: 0 0 0.25rem;
+}
+
+.brand-powered-by {
+	font-size: 0.76rem;
+	color: var(--bl-text-muted);
+	opacity: 0.75;
+	margin: 0;
+}
+
+/* ---- focus-visible everywhere ------------------------------------------ */
+
+.brand-panel a:focus-visible,
+.brand-panel button:focus-visible {
+	outline: 2px solid var(--brand-primary);
+	outline-offset: 2px;
+}
+
+/* ---- responsive ---------------------------------------------------------- */
+
+@media (max-width: 900px) {
+	.brand-auth-shell {
+		grid-template-columns: 1fr;
+	}
+
+	.brand-hero {
+		padding: 2rem 1.5rem;
+	}
+
+	.brand-hero-inner {
+		max-width: none;
+		text-align: center;
+		margin: 0 auto;
+	}
+
+	.brand-signal {
+		justify-content: center;
+	}
+
+	.brand-wordmark {
+		font-size: 1.9rem;
+	}
+
+	.brand-tagline {
+		max-width: none;
+		margin-left: auto;
+		margin-right: auto;
+	}
+
+	.brand-panel {
+		padding: 2rem 1.25rem 3rem;
+	}
+}
+
+@media (max-width: 480px) {
+	.brand-card,
+	.login-content.page-card {
+		padding: 1.4rem 1.25rem 1.25rem;
+		border-radius: 14px;
+	}
+}

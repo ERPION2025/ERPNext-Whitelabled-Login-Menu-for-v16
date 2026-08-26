@@ -1,0 +1,125 @@
+{
+ "doctype": "DocType",
+ "name": "Login Branding Settings",
+ "module": "Brandlogin",
+ "custom": 0,
+ "issingle": 1,
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "product_name",
+  "business_name",
+  "tagline",
+  "column_break_1",
+  "logo",
+  "favicon",
+  "section_break_theme",
+  "primary_color",
+  "accent_color",
+  "background_style",
+  "section_break_footer",
+  "show_powered_by",
+  "footer_text",
+  "support_email"
+ ],
+ "fields": [
+  {
+   "fieldname": "product_name",
+   "fieldtype": "Data",
+   "label": "Product Name",
+   "reqd": 1,
+   "default": "Vodafone",
+   "description": "The whitelabel umbrella brand shown on the dark hero panel (e.g. Vodafone, Vodafone X)."
+  },
+  {
+   "fieldname": "business_name",
+   "fieldtype": "Data",
+   "label": "Business / Store Name",
+   "description": "The specific tenant, e.g. 'Glow Salon & Spa'. Shown next to the logo on the form panel. Leave blank to fall back to Product Name."
+  },
+  {
+   "fieldname": "tagline",
+   "fieldtype": "Data",
+   "label": "Tagline",
+   "default": "Run your business, beautifully simple."
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "logo",
+   "fieldtype": "Attach Image",
+   "label": "Business Logo",
+   "description": "Shown on the form panel above the sign-in heading. Square or wide logos both work — recommended height 40-56px."
+  },
+  {
+   "fieldname": "favicon",
+   "fieldtype": "Attach Image",
+   "label": "Favicon"
+  },
+  {
+   "fieldname": "section_break_theme",
+   "fieldtype": "Section Break",
+   "label": "Theme"
+  },
+  {
+   "fieldname": "primary_color",
+   "fieldtype": "Color",
+   "label": "Primary Color",
+   "default": "#E60000",
+   "description": "The brand color — red across every tenant by design. Drives the hero panel, buttons and focus states. Don't change the hue per business; adjust only if your exact brand guideline gives a different red/hex."
+  },
+  {
+   "fieldname": "accent_color",
+   "fieldtype": "Color",
+   "label": "Accent Color",
+   "default": "#A30000",
+   "description": "A deeper red for the status dot and small highlights — stays in the same red family as Primary Color, never a different hue."
+  },
+  {
+   "fieldname": "background_style",
+   "fieldtype": "Select",
+   "label": "Hero Background",
+   "options": "Gradient\nSolid",
+   "default": "Gradient"
+  },
+  {
+   "fieldname": "section_break_footer",
+   "fieldtype": "Section Break",
+   "label": "Footer"
+  },
+  {
+   "fieldname": "show_powered_by",
+   "fieldtype": "Check",
+   "label": "Show \"Powered by\" badge",
+   "default": "1"
+  },
+  {
+   "fieldname": "footer_text",
+   "fieldtype": "Data",
+   "label": "Custom Footer Text",
+   "description": "Optional — e.g. support hours, a legal line."
+  },
+  {
+   "fieldname": "support_email",
+   "fieldtype": "Data",
+   "label": "Support Email",
+   "options": "Email"
+  }
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "print": 1,
+   "email": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1,
+ "quick_entry": 0
+}
