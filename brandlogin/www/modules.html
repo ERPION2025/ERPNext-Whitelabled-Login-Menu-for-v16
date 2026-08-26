@@ -1,0 +1,64 @@
+{% extends "templates/web.html" %}
+
+{% block navbar %}{% endblock %}
+
+{% block sidebar %}{% endblock %}
+
+{% block head_include %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/brandlogin/css/brand_modules.css">
+<style>
+	:root {
+		--brand-primary: {{ brand_primary }};
+		--brand-accent: {{ brand_accent }};
+	}
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="mod-shell">
+
+	<header class="mod-topbar">
+		<div class="mod-brand">
+			{% if brand_logo %}<img class="mod-logo" src="{{ brand_logo }}" alt="{{ brand_business_name or brand_product_name }}">{% endif %}
+			<div class="mod-brand-text">
+				<div class="mod-business">{{ brand_business_name or brand_product_name }}</div>
+				<div class="mod-product">{{ brand_product_name }}</div>
+			</div>
+		</div>
+		<div class="mod-user">
+			<span class="mod-user-name">{{ full_name }}</span>
+			<a href="/api/method/logout" class="mod-logout">{{ _("Log out") }}</a>
+		</div>
+	</header>
+
+	<div class="mod-welcome">
+		<h1 class="mod-heading">{{ _("Welcome back{0}").format(", " + first_name if first_name else "") }}</h1>
+		<p class="mod-sub">{{ _("Pick a module to get started.") }}</p>
+	</div>
+
+	{% if modules %}
+	<div class="mod-grid">
+		{% for m in modules %}
+		<a class="mod-card" href="{{ m.route }}">
+			<span class="mod-icon-wrap">
+				<svg class="mod-icon" width="22" height="22" viewBox="0 0 24 24">
+					<use href="#icon-{{ m.icon }}"></use>
+				</svg>
+			</span>
+			<span class="mod-title">{{ m.title }}</span>
+		</a>
+		{% endfor %}
+	</div>
+	{% else %}
+	<div class="mod-empty">
+		<p>{{ _("No modules are available for your account yet. Contact your administrator.") }}</p>
+	</div>
+	{% endif %}
+
+</div>
+{% endblock %}
+
+{% block script %}{% endblock %}
