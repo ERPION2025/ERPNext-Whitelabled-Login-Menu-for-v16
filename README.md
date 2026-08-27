@@ -127,30 +127,57 @@ default, so a workspace's own Roles restriction is respected exactly
 as it is in Desk — this app doesn't add or bypass any access control.
 
 Redirecting away from Desk is a real behavior change, not just a
-template swap, so this ships with one `hooks.py` line already wired up:
+template swap, so this ships with three `hooks.py` entries already
+wired up:
 
 ```python
 get_website_user_home_page = "brandlogin.utils.get_home_page"
+on_login = ["brandlogin.utils.on_login"]
+before_request = ["brandlogin.utils.before_request"]
 ```
 
-This is Frappe's own documented extension point for "what does a
-logged-in user see at `/`". `utils.get_home_page()` sends everyone to
-`/modules` except Administrator, who still lands on `/app` — keep that
-escape hatch, or every future `bench` debugging session gets routed
-through the launcher too. (Note `utils.py` lives at the app's package
-root — `brandlogin/utils.py` — since that's the path the hook's dotted
-string `brandlogin.utils.get_home_page` actually imports; it's *not*
-nested under the `brandlogin/brandlogin/` module folder alongside the
-doctype, easy to get backwards if you're moving files around.)
+`get_website_user_home_page` is Frappe's own documented extension
+point for "what does a logged-in user see at `/`" — but on a real
+ERPNext account it's **not enough by itself**, which is why login used
+to appear branded while everything past it stayed default Desk:
 
-**Important caveat:** this controls where **`/`** resolves for a
-logged-in user, which is also where core's login flow lands by
-default. If anything in your setup explicitly redirects straight to
-`/app` after login (a custom `redirect-to` link, a bookmarked URL,
-etc.), that will still skip the launcher — the hook can't intercept a
-request that never hits `/`. Test by logging in fresh and watching
-where you land; if it's still `/app` directly, track down that
-redirect and point it at `/modules` instead.
+- Core's `frappe.website.utils.get_home_page()` has a **"Default
+  Workspace"** check that runs after everything else, including this
+  hook, and silently overrides its result the moment a user has ever
+  pinned a workspace from the Desk sidebar — normal, common state on
+  any real account, just not on a freshly created one. The only thing
+  that wins over that check is `frappe.local.flags.home_page`, so
+  `on_login` and `before_request` set that flag directly instead of
+  relying on the hook alone.
+- `on_login` (not just `before_request`) is required because the very
+  first `/api/method/login` call resolves and finishes inside
+  `HTTPRequest.set_session()` — which runs *before* `before_request`
+  hooks do — so by the time `before_request` would fire, the login
+  response's own `home_page` field (what `login.js` uses to send the
+  browser somewhere immediately after signing in) has already been
+  computed. `on_login` fires early enough inside that same login flow
+  to still catch it. `before_request` then covers the other case:
+  an already-logged-in user visiting bare `/` on some later request,
+  where no login is happening and `before_request` runs early enough
+  on its own.
+
+Both `on_login` and `before_request` send everyone to `/modules`
+except Administrator, who still lands on `/app` — keep that escape
+hatch, or every future `bench` debugging session gets routed through
+the launcher too. (Note `utils.py` lives at the app's package root —
+`brandlogin/utils.py` — since that's the path these hooks' dotted
+strings actually import; it's *not* nested under the
+`brandlogin/brandlogin/` module folder alongside the doctype, easy to
+get backwards if you're moving files around.)
+
+**Remaining caveat:** all of the above controls where **`/`** and the
+login response resolve. If anything in your setup explicitly
+redirects straight to `/app` by some *other* route (a custom
+`redirect-to` link, a bookmarked URL to `/app` itself, an API
+integration that logs users in and sends them elsewhere directly),
+that will still skip the launcher, since nothing here can intercept a
+request that never asks for `/` or goes through this app's login
+response. Test by logging in fresh and watching where you land.
 
 **Icons:** each card reads the workspace's own `icon` field and
 renders it via Frappe's built-in icon sprite (`#icon-<name>`), the

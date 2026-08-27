@@ -66,6 +66,12 @@ app_license = "mit"
 
 get_website_user_home_page = "brandlogin.utils.get_home_page"
 
+# Fires at the start of LoginManager.post_login(), early enough to still
+# influence the login response's own home_page field — see the docstring
+# on brandlogin.utils.on_login for why this hook (rather than
+# get_website_user_home_page alone) is what's actually needed here.
+on_login = ["brandlogin.utils.on_login"]
+
 # Generators
 # ----------
 
@@ -207,7 +213,7 @@ get_website_user_home_page = "brandlogin.utils.get_home_page"
 
 # Request Events
 # ----------------
-# before_request = ["brandlogin.utils.before_request"]
+before_request = ["brandlogin.utils.before_request"]
 # after_request = ["brandlogin.utils.after_request"]
 
 # Job Events
