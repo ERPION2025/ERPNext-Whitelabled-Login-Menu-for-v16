@@ -1,6 +1,11 @@
 import json
 
 import frappe
+from frappe import _
+
+
+def get_branding_settings():
+	return frappe.get_cached_doc("Login Branding Settings")
 
 
 def get_home_page(user):
@@ -77,3 +82,45 @@ def after_request(response, request):
 		response.status_code = 302
 		response.headers["Location"] = "/modules"
 		response.set_data(b"")
+
+
+def extend_bootinfo(bootinfo):
+	"""
+	Registered via hooks.py's extend_bootinfo. Runs once per Desk session
+	and hands the branding settings to the client as frappe.boot.brandlogin
+	— see public/js/brand_desk.js, which reads this and applies it as CSS
+	custom properties on every Desk page, across every installed app
+	(HR, CRM, POS, etc. all render inside the same Desk shell and read the
+	same theme variables Frappe itself uses, so this isn't per-app).
+
+	Guest sessions don't get a bootinfo call for this at all in practice
+	(no Desk to theme), but check anyway since extend_bootinfo hooks can
+	run for portal/website-adjacent boot too.
+	"""
+	if frappe.session.user == "Guest":
+		return
+	settings = get_branding_settings()
+	bootinfo.brandlogin = {
+		"primary_color": settings.primary_color or "#E60000",
+		"accent_color": settings.accent_color or "#A30000",
+		"product_name": settings.product_name or "Vodafone",
+		"show_powered_by": bool(settings.show_powered_by),
+	}
+
+
+def update_website_context(context):
+	"""
+	Registered via hooks.py's update_website_context. Runs for every
+	templated website page (not Desk — actual /web pages, e.g. a Web Page
+	or portal page). Frappe's own footer template
+	(templates/includes/footer/footer_info.html) already has a
+	`footer_powered` context-variable escape hatch that, when set, is used
+	instead of the hardcoded "Powered by ERPNext" include — see
+	templates/includes/footer/footer_powered.html in core. This fills
+	that in from the same settings driving everything else, so "Powered
+	by ERPNext" doesn't show up on ordinary website pages either.
+	"""
+	settings = get_branding_settings()
+	return {
+		"footer_powered": f'{_("Powered by")} {settings.product_name or "Vodafone"}',
+	}
