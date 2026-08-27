@@ -1,3 +1,5 @@
+import json
+
 import frappe
 
 
@@ -10,8 +12,9 @@ def get_home_page(user):
 	see the module launcher first, then choose a workspace, instead of
 	dropping straight into Desk.
 
-	In practice this hook alone isn't enough — see on_login and
-	before_request below for why, and why they're needed too.
+	In practice this hook alone isn't reliable enough on its own to
+	depend on — see after_request below for why, and why it's what
+	actually makes this stick.
 	"""
 	if user == "Administrator":
 		# Keep the System Manager escape hatch to Desk untouched.
@@ -19,44 +22,58 @@ def get_home_page(user):
 	return "modules"
 
 
-def on_login(login_manager):
+def after_request(response, request):
 	"""
-	Registered via hooks.py's on_login. This is what actually makes the
-	very first post-login redirect land on /modules.
+	Registered via hooks.py's after_request. This is what actually makes
+	the launcher stick, on a site with several other apps installed
+	alongside this one.
 
-	frappe.website.utils.get_home_page() has a "Default Workspace" check
-	that overrides everything else it computes — including the
-	get_website_user_home_page hook above — the moment a user has ever
-	pinned a workspace from the Desk sidebar. That's normal, common state
-	on any real account (just not on a freshly created test user), which
-	is why the launcher can appear to "only work on the login page": real
-	users skip straight past the hook to their last workspace instead.
+	The "obvious" approach — a get_website_user_home_page hook, or an
+	on_login/before_request hook setting frappe.local.flags.home_page —
+	is a *computation* that has to win against every other installed
+	app's opinion about where a user should land (their own
+	get_website_user_home_page hook, their own on_login hook, a per-user
+	Default Workspace, etc.). Whichever one happens to run last for a
+	given hook wins, and that's other apps' code, not something this app
+	can reliably control — which is exactly what happened here: with
+	several other apps also installed, the get_website_user_home_page
+	hook above kept getting overridden, and the login page's own
+	branding (which doesn't depend on any of this) was the only part
+	that visibly worked.
 
-	The one thing get_home_page() checks *before* any of that logic runs
-	is frappe.local.flags.home_page, so we set it directly. This has to
-	happen here rather than in a before_request hook: for the initial
-	`/api/method/login` call, LoginManager runs to completion (including
-	computing the response's home_page field) inside
-	HTTPRequest.set_session(), which fires *before* before_request hooks
-	do — so by the time before_request would run, it's already too late
-	to change that response. on_login fires at the start of
-	post_login(), before set_user_info() reads get_home_page(), so it's
-	early enough.
+	after_request sidesteps that race entirely by not trying to win a
+	computation at all — it runs after every hook has had its say and
+	the response is fully built, so it can just directly rewrite the
+	final output for the two places a home page actually gets read:
+
+	- POST /api/method/login: correct the JSON response's home_page
+	  field, which is what login.js uses to send the browser somewhere
+	  immediately after signing in.
+	- GET "/", "/app", "/desk" (bare, no sub-path): turn the response
+	  into a redirect to /modules outright, regardless of what page it
+	  was originally going to render. A deep link into a specific
+	  workspace ("/app/some-workspace") is left alone, so Desk
+	  navigation afterwards isn't affected — only these bare landing
+	  routes are.
 	"""
-	if login_manager.user == "Administrator":
-		return
-	frappe.local.flags.home_page = "modules"
-
-
-def before_request():
-	"""
-	Covers the other case get_home_page() gets used for: an
-	already-logged-in user visiting "/" directly on some later request
-	(a bookmark, a link with no query params) — no LoginManager involved
-	that time, so before_request runs early enough on its own.
-	"""
-	if frappe.request.path not in ("/", ""):
-		return
 	if frappe.session.user in ("Guest", "Administrator"):
 		return
-	frappe.local.flags.home_page = "modules"
+
+	path = request.path
+
+	if path == "/api/method/login":
+		if response.mimetype != "application/json":
+			return
+		try:
+			data = json.loads(response.get_data(as_text=True))
+		except ValueError:
+			return
+		if data.get("message") == "Logged In" and data.get("home_page") != "modules":
+			data["home_page"] = "modules"
+			response.set_data(json.dumps(data).encode("utf-8"))
+		return
+
+	if path in ("/", "", "/app", "/desk"):
+		response.status_code = 302
+		response.headers["Location"] = "/modules"
+		response.set_data(b"")
