@@ -15,6 +15,13 @@ dependencies = [
 requires = ["flit_core >=3.4,<4"]
 build-backend = "flit_core.buildapi"
 
+# This app targets ERPNext v16 specifically (file-based /login and /modules
+# overrides, Workspace fields) — pin both bounds so Frappe Cloud only offers
+# this app on a v16 Bench Group.
+[tool.bench.frappe-dependencies]
+frappe = ">=16.0.0,<17.0.0"
+erpnext = ">=16.0.0,<17.0.0"
+
 # These dependencies are only installed when developer mode is enabled
 [tool.bench.dev-dependencies]
 # package_name = "~=1.1.0"
