@@ -189,6 +189,48 @@ already have icons set) render correctly with zero extra config. A
 workspace with no icon set falls back to a generic folder icon rather
 than a blank card.
 
+## Theming the rest of Desk
+
+Login and the launcher are one thing — the actual ERPNext workspace
+you land in afterwards is another. This app also recolors Desk itself
+using the same Primary/Accent Color you already set once in **Login
+Branding Settings**, no separate configuration:
+
+- Primary buttons, borders, checkboxes/radio buttons, focus rings, and
+  the left sidebar's active-item highlight, across **every** doctype's
+  list view and form view.
+- **Not per-app.** This works by overriding Frappe's own theme CSS
+  custom properties (`--primary`, `--btn-primary`, `--border-primary`,
+  `--focus-default`, `--sidebar-active-color` — the same ones its own
+  light/dark toggle switches between) at the Desk-shell level, once,
+  via `app_include_js`. Every installed app — ERPNext, HR & Payroll,
+  POSNext, a CRM, whatever else — renders its doctypes, forms, and
+  lists inside that same shell and reads those same variables, so this
+  isn't something that has to be repeated or configured per app.
+- **How it works:** `extend_bootinfo` (`brandlogin.utils.extend_bootinfo`)
+  hands the Primary/Accent Color to the client once per Desk session as
+  `frappe.boot.brandlogin`; `public/js/brand_desk.js`
+  (`app_include_js`) reads that and sets the CSS variables as inline
+  styles on `<html>` — which, being inline, beats any stylesheet rule
+  regardless of light/dark mode, so it doesn't need to hook the theme
+  switcher separately.
+- **Scope, honestly:** this covers Frappe's own foundational theme
+  variables — the surface Frappe itself designed to be the "theme-able"
+  one, and what drives the overwhelming majority of what you see in
+  normal use. It won't reach a genuinely bespoke widget some other app
+  hardcodes its own colors into (charts, a custom report, etc.) instead
+  of reading these variables — if you hit one, it needs its own
+  targeted CSS, the same as any other one-off override would.
+
+**"Powered by ERPNext" → "Powered by \<Product Name\>":** core's own
+website footer template (any ordinary `/`-style web page, not Desk)
+has a `footer_powered` context variable that, when set, replaces its
+hardcoded "Powered by ERPNext" credit line. `update_website_context`
+(`brandlogin.utils.update_website_context`) fills that in from the
+same Product Name field as everywhere else, so it reads "Powered by
+Vodafone" by default, or whatever tenant name you set, without editing
+core templates.
+
 ## Uninstall
 
 ```bash

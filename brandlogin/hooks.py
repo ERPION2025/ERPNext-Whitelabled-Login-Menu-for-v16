@@ -25,8 +25,12 @@ app_license = "mit"
 # ------------------
 
 # include js, css files in header of desk.html
-# app_include_css = "/assets/brandlogin/css/brandlogin.css"
-# app_include_js = "/assets/brandlogin/js/brandlogin.js"
+# Loads on every Desk page across every installed app (HR, CRM, POS,
+# etc. all render inside this same Desk shell) — applies the brand
+# colors from Login Branding Settings as CSS custom properties. See
+# public/js/brand_desk.js and brandlogin.utils.extend_bootinfo, which
+# hands it the settings via frappe.boot.
+app_include_js = "/assets/brandlogin/js/brand_desk.js"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/brandlogin/css/brandlogin.css"
@@ -52,6 +56,12 @@ app_license = "mit"
 # ------------------
 # include app icons in desk
 # app_include_icons = "brandlogin/public/icons.svg"
+
+# Boot Session
+# ------------------
+# Hands the client the branding settings (as frappe.boot.brandlogin) so
+# brand_desk.js above has something to read.
+extend_bootinfo = ["brandlogin.utils.extend_bootinfo"]
 
 # Home Pages
 # ----------
@@ -83,6 +93,11 @@ get_website_user_home_page = "brandlogin.utils.get_home_page"
 # 	"methods": "brandlogin.utils.jinja_methods",
 # 	"filters": "brandlogin.utils.jinja_filters"
 # }
+
+# Fills in the `footer_powered` variable core's own footer template
+# already supports, so "Powered by ERPNext" doesn't show up on ordinary
+# website pages either — see brandlogin.utils.update_website_context.
+update_website_context = ["brandlogin.utils.update_website_context"]
 
 # Installation
 # ------------
