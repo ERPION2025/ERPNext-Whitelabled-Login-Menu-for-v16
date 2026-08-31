@@ -42,7 +42,7 @@ def get_modules():
 	workspaces = frappe.get_all(
 		"Workspace",
 		filters={"public": 1, "parent_page": ["in", ["", None]]},
-		fields=["name", "title", "icon", "sequence_id"],
+		fields=["name", "title", "icon", "sequence_id", "route"],
 		order_by="sequence_id asc",
 	)
 
@@ -53,7 +53,11 @@ def get_modules():
 			{
 				"title": title,
 				"icon": ws.icon or "folder-normal",
-				"route": "/app/" + _slugify(title),
+				# Workspace's own `route` field is what Desk itself uses to link
+				# here — reuse it rather than re-deriving a slug from the title,
+				# which drifts for titles core's slugifier doesn't map 1:1
+				# (accents, "&", multi-word titles with different casing rules).
+				"route": "/app/" + (ws.route or _slugify(title)),
 			}
 		)
 	return modules

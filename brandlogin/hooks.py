@@ -26,7 +26,7 @@ app_license = "mit"
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/brandlogin/css/brandlogin.css"
-# app_include_js = "/assets/brandlogin/js/brandlogin.js"
+app_include_js = "/assets/brandlogin/js/brand_desk_home.js"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/brandlogin/css/brandlogin.css"

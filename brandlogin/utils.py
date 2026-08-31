@@ -1,6 +1,21 @@
 import frappe
 
 
+def has_desk_access(user):
+	"""
+	Whether this user is allowed to land on Desk itself (the /app
+	workspace list) rather than being funneled through /modules.
+
+	Kept role-based rather than a literal Administrator check: any
+	System Manager should get normal Desk behaviour, and everyone else
+	— regardless of which specific doctypes their other roles grant
+	them — should never see raw Desk.
+	"""
+	if user == "Administrator":
+		return True
+	return "System Manager" in frappe.get_roles(user)
+
+
 def get_home_page(user):
 	"""
 	Registered via hooks.py as get_website_user_home_page.
@@ -13,8 +28,7 @@ def get_home_page(user):
 	In practice this hook alone isn't enough — see on_login and
 	before_request below for why, and why they're needed too.
 	"""
-	if user == "Administrator":
-		# Keep the System Manager escape hatch to Desk untouched.
+	if has_desk_access(user):
 		return "app"
 	return "modules"
 
@@ -43,20 +57,34 @@ def on_login(login_manager):
 	post_login(), before set_user_info() reads get_home_page(), so it's
 	early enough.
 	"""
-	if login_manager.user == "Administrator":
+	if has_desk_access(login_manager.user):
 		return
 	frappe.local.flags.home_page = "modules"
 
 
 def before_request():
 	"""
-	Covers the other case get_home_page() gets used for: an
-	already-logged-in user visiting "/" directly on some later request
-	(a bookmark, a link with no query params) — no LoginManager involved
-	that time, so before_request runs early enough on its own.
+	Covers the other cases get_home_page() and the /app SPA entry get
+	used for: an already-logged-in user visiting "/" directly on some
+	later request (a bookmark, a link with no query params), or hitting
+	bare Desk ("/app") — via a bookmark, typed URL, or the Desk navbar's
+	own home icon (which core hardcodes to /app; see
+	brand_desk_home.js for the client-side half of that fix). No
+	LoginManager is involved on either of these, so before_request runs
+	early enough on its own.
+
+	Only the bare Desk landing is blocked here — a specific workspace
+	route like /app/selling is left alone, since users are meant to work
+	inside Desk for whatever their roles permit once they've picked a
+	module from /modules.
 	"""
-	if frappe.request.path not in ("/", ""):
+	user = frappe.session.user
+	if user == "Guest" or has_desk_access(user):
 		return
-	if frappe.session.user in ("Guest", "Administrator"):
-		return
-	frappe.local.flags.home_page = "modules"
+
+	path = frappe.request.path
+	if path in ("/", ""):
+		frappe.local.flags.home_page = "modules"
+	elif path in ("/app", "/app/"):
+		frappe.local.flags.redirect_location = "/modules"
+		raise frappe.Redirect
